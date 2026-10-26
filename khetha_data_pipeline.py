@@ -84,9 +84,9 @@ class KhethaDataPipeline:
         }
         if name in exact_ids or name.endswith(("uuid", "guid")):
             return True
-        if name.endswith("id") and any(
-            token in name for token in ("claim", "policy", "holder", "vehicle", "customer", "person", "record", "reference", "transaction", "account", "member")
-        ):
+        # Catch identifiers such as incidentid or claimantid even when their names
+        # do not contain one of the more common entity prefixes.
+        if name.endswith("id") and name not in {"valid", "invalid", "liquid", "solid", "grid", "fluid", "pyramid"}:
             return True
 
         # Dates/timestamps can encode future information and are not used as raw features.
@@ -216,9 +216,11 @@ class KhethaDataPipeline:
             "applicable": True,
             "class_counts": {str(k): int(v) for k, v in counts.items()},
             "majority_minority_ratio": float(ratio),
+            "imbalance_ratio": float(ratio),
             "minority_proportion": float(minority_share),
             "minority_percentage": float(minority_share * 100),
             "minority_below_5_percent": bool(below_five_percent),
+            "is_imbalanced": bool(below_five_percent),
         }
         print(
             f"Class imbalance | counts={self.class_imbalance_report['class_counts']} | "
